@@ -8,6 +8,25 @@ Maintained by [tigaotg](https://github.com/tigaotg), based on
 [Zlion-Y/zte-e2631-openwrt](https://github.com/Zlion-Y/zte-e2631-openwrt).
 Original contributors and development history are preserved.
 
+### What has been improved over the original project?
+
+Zlion-Y and the original contributors established the initial OpenWrt
+port, vendor-compatible packaging, A/B boot support and early MT7916
+bring-up. This fork focuses on operational improvements and hardware validation.
+
+| Original v1.2 status | Continued development | Validation |
+|---|---|---|
+| Wi-Fi disabled by default; manual initialization required | Automatic Wi-Fi startup with preservation of user configuration | Boot tested; repeated cold boots pending |
+| MT7916 initialization could hang | PL310 L2 cache synchronization and controlled PCIe binding | Initialization succeeds; not all hangs are proven fixed |
+| 5 GHz AP verified; 2.4 GHz unverified | Automatic initialization of both PHYs and AP interfaces | Both AP interfaces observed; association needs further testing |
+| Limited JFFS2 overlay storage | 47 MiB userdata partition with UBI/UBIFS Extroot | Mounted on the test device, approximately 37.5 MiB usable |
+| Client association could hard-lock the router | Continued investigation of cache, PCIe and mt76 interactions | Full regression validation still pending |
+
+These are changes relative to the documented original v1.2 testing
+state. They do not imply that the original port lacked fundamental
+boot functionality or that all remaining hardware issues are resolved.
+
+
 **Hardware-verified experimental build: `6ab4488`**
 
 - Linux 6.18.55 boots on the dual-core ZX279128S.
