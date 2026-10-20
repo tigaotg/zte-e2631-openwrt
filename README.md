@@ -2,6 +2,16 @@
 
 **中文** · [English](README.en.md)
 
+## 2026-10-20：完整交接与新上传代码
+
+**[完整中文技术交接](https://github.com/tigaotg/zte-e2631-openwrt/blob/handoff/consolidated-2026-10-20/docs/HANDOFF-2026-10-20-zh.md)** · **[整合源码和文档分支](https://github.com/tigaotg/zte-e2631-openwrt/tree/handoff/consolidated-2026-10-20)** · **[原样本地提交备份](https://github.com/tigaotg/zte-e2631-openwrt/tree/handoff/local-2026-10-20)**
+
+此默认 `main` 分支**不包含**全部 Wi-Fi 自动启动和 2026-10-20 最新 userdata 初始化实验源码；请通过上面的整合分支审查。整合分支已包含 Wi-Fi 自动双频 AP 逻辑、PL310/NAND userdata、UBIFS Extroot 预附加、只读预检、带明确确认要求的格式化原型、9 项隔离模拟测试、诊断心跳默认关闭及未完成的迁移脚本。**真实设备上仅验证过已初始化 UBIFS 的 Extroot 和 Wi-Fi 正常重启自动广播与配置保留；全新 userdata 首次初始化、whiteout/xattr 迁移、断电恢复及无线反复冷启动仍未验收。请勿把实验分支直接当稳定固件刷入，也不要自动执行 NAND 格式化。**
+
+以下原始状态和测试说明作为历史参考保留。
+
+---
+
 ## 当前开发状态（2026-10-19）
 
 本仓库由 [tigaotg](https://github.com/tigaotg) 维护，
