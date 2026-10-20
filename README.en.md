@@ -2,6 +2,16 @@
 
 [中文](README.md) · **English**
 
+## 2026-10-20: full source handoff
+
+**[Complete handoff report (Chinese)](https://github.com/tigaotg/zte-e2631-openwrt/blob/handoff/consolidated-2026-10-20/docs/HANDOFF-2026-10-20-zh.md)** · **[Consolidated source and documentation branch](https://github.com/tigaotg/zte-e2631-openwrt/tree/handoff/consolidated-2026-10-20)** · **[Backup of final local commits](https://github.com/tigaotg/zte-e2631-openwrt/tree/handoff/local-2026-10-20)**
+
+The default `main` branch **does not include** the complete delayed Wi-Fi autoboot implementation or the 2026-10-20 NAND userdata initialization work. Review the consolidated branch for source, nine passing *mock-only* initialization tests, heartbeat opt-in changes and the unfinished overlay migration prototype. Automatic dual-band Wi-Fi after normal reboot, preservation of changed wireless settings and UBIFS Extroot on an **already initialized** volume were observed on one board; a fresh first install, OverlayFS whiteout/xattr preservation, power-loss-safe activation and repeated cold boots were **not** validated. **Do not treat the WIP branch as a general-use firmware or automatically format NAND.**
+
+Earlier project notes below are retained as historical evidence.
+
+---
+
 ## Current development status (2026-10-19)
 
 Maintained by [tigaotg](https://github.com/tigaotg), based on
