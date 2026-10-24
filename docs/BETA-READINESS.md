@@ -74,3 +74,16 @@ future boot activation rule must include a tested legacy compatibility path.
 
 The existing ROM `fstab enabled '1'` is still unresolved and prevents release.
 Never tell users that passing this mock test makes the current image safe to flash.
+
+## Manual UBI preflight (developer diagnostics only)
+
+`/sbin/e2631-extroot-preflight --inspect` checks the expected `mtd10`
+geometry, UBI0→mtd10 mapping and `userdata` volume name. It inspects
+an already-mounted UBIFS volume or attempts a **read-only** temporary mount,
+invokes the structure audit, and unmounts the temporary mount afterward.
+It does not attach, format, erase, migrate, activate or modify `fstab`.
+
+A `*_CANDIDATE_NEEDS_DEVICE_VALIDATION` result is **not** a safe-to-enable
+decision. This diagnostic is not automatically called from preinit.
+Do not run it in place of a backup or recovery preparation; real-device
+validation of the read-only mount and cleanup behavior remains pending.
