@@ -21,7 +21,7 @@ with tempfile.TemporaryDirectory() as folder:
     env["PATH"] = str(tool)
 
     def check(expected, code):
-        p = subprocess.run(["sh", str(audit), "--inspect-upper", str(upper)], env=env, capture_output=True, text=True)
+        p = subprocess.run(["/bin/sh", str(audit), "--inspect-upper", str(upper)], env=env, capture_output=True, text=True)
         assert (p.stdout.splitlines()[0], p.returncode) == (expected, code), p
 
     # Tool absent is unknown, not a clean metadata result.
@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory() as folder:
 
     # Old migration interface must refuse even when given arbitrary paths.
     marker = path / "must-not-write"
-    proc = subprocess.run(["sh", str(migrate), "--stage", str(upper), str(marker)], capture_output=True, text=True)
+    proc = subprocess.run(["/bin/sh", str(migrate), "--stage", str(upper), str(marker)], capture_output=True, text=True)
     assert proc.returncode != 0 and "REFUSED_MIGRATION_NOT_METADATA_SAFE" in proc.stdout
     assert not marker.exists()
 
