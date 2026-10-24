@@ -1,0 +1,56 @@
+#!/bin/sh
+# Read-only policy inspection of an ALREADY mounted userdata root.
+# This does not mount, attach, format, migrate or activate any NAND volume.
+# A CANDIDATE is NOT authorization for mount_root to switch overlay.
+set -eu
+
+[ "${1:-}" = "--inspect-dir" ] && [ "$#" -eq 2 ] || {
+    echo "Usage: $0 --inspect-dir MOUNTED_USERDATA" >&2
+    exit 2
+}
+ROOT=$2
+[ -d "$ROOT" ] && [ ! -L "$ROOT" ] || {
+    echo "REFUSED_NOT_DIRECTORY"
+    exit 1
+}
+
+# No unsafe paths, symlinked metadata directories or unfinished migrations.
+[ "$ROOT" != / ] || { echo "REFUSED_ROOT_PATH"; exit 1; }
+for p in upper work .e2631-stage .e2631-extroot-ready; do
+    if [ -L "$ROOT/$p" ]; then
+        echo "REFUSED_SYMLINK:$p"
+        exit 1
+    fi
+done
+
+if [ -e "$ROOT/.e2631-stage" ]; then
+    echo "INCOMPLETE_STAGING"
+    exit 1
+fi
+
+if [ ! -e "$ROOT/upper" ] && [ ! -e "$ROOT/work" ]; then
+    echo "UNINITIALIZED"
+    exit 1
+fi
+
+if [ ! -d "$ROOT/upper" ] || [ ! -d "$ROOT/work" ]; then
+    echo "INCOMPLETE_OVERLAY_LAYOUT"
+    exit 1
+fi
+
+if [ -n "$(find "$ROOT/work" -mindepth 1 -maxdepth 1 -print -quit)" ]; then
+    echo "REFUSED_NONEMPTY_WORK"
+    exit 1
+fi
+
+if [ -f "$ROOT/.e2631-extroot-ready" ]; then
+    [ "$(cat "$ROOT/.e2631-extroot-ready")" = "e2631-extroot-v1" ] || {
+        echo "REFUSED_INVALID_MARKER"
+        exit 1
+    }
+    echo "MARKED_CANDIDATE_NEEDS_DEVICE_VALIDATION"
+else
+    # Existing installations predate the marker. Never silently reject or
+    # overwrite them, but don't auto-approve an unmarked new migration either.
+    echo "LEGACY_CANDIDATE_NEEDS_DEVICE_VALIDATION"
+fi
