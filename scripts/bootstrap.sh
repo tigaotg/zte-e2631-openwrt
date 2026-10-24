@@ -69,6 +69,20 @@ for f in packages luci; do
 		say "cloning feed $f"
 		git clone -q --depth 1 --single-branch "https://github.com/openwrt/$f" "$E2631_TREE/feeds/$f"
 	}
+	# Optional immutable feed commits for CI / release reproducibility.
+	# Never discard a maintainer's patched or otherwise dirty feed checkout.
+	case "$f" in
+	    packages) pinned=${E2631_PACKAGES_SHA:-} ;;
+	    luci) pinned=${E2631_LUCI_SHA:-} ;;
+	esac
+	if [ -n "$pinned" ] && [ "$(git -C "$E2631_TREE/feeds/$f" rev-parse HEAD)" != "$pinned" ]; then
+	    [ -z "$(git -C "$E2631_TREE/feeds/$f" status --porcelain)" ] ||
+		die "feed $f has local edits; refusing to change its commit"
+	    say "pinning feed $f at $pinned"
+	    git -C "$E2631_TREE/feeds/$f" fetch -q --depth 1 origin "$pinned" ||
+		die "cannot fetch pinned $f commit $pinned"
+	    git -C "$E2631_TREE/feeds/$f" checkout -q --detach "$pinned"
+	fi
 	[ -f "$E2631_TREE/feeds/$f.index" ] || {
 		say "indexing feed $f"
 		( cd "$E2631_TREE" && ./scripts/feeds update "$f" 2>&1 | tail -3 )
