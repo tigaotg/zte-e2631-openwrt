@@ -1,0 +1,48 @@
+#!/bin/sh
+# Read-only OverlayFS upperdir metadata inventory for E2631 migration planning.
+# This is NOT a migration tool and a clean result is NOT proof of safe copying.
+set -eu
+
+[ "${1:-}" = "--inspect-upper" ] && [ "$#" -eq 2 ] || {
+    echo "Usage: $0 --inspect-upper SOURCE_UPPER" >&2
+    exit 2
+}
+SRC=$2
+[ -d "$SRC" ] && [ ! -L "$SRC" ] || {
+    echo "REFUSED_INVALID_SOURCE"
+    exit 1
+}
+case "$SRC" in
+    /*/upper) ;;
+    *) echo "REFUSED_NOT_UPPER_DIR"; exit 1 ;;
+esac
+
+# OverlayFS represents whiteouts as chr(0,0) on some backends. Other
+# implementations use overlay-specific xattrs; inspect both surfaces.
+whiteout=$(find "$SRC" -xdev -type c -print -quit 2>/dev/null) || {
+    echo "UNKNOWN_FIND_FAILED"
+    exit 1
+}
+if [ -n "$whiteout" ]; then
+    echo "WHITEOUTS_PRESENT"
+    echo "EXAMPLE:$whiteout"
+    exit 1
+fi
+
+if ! command -v getfattr >/dev/null 2>&1; then
+    echo "UNKNOWN_XATTR_TOOL_UNAVAILABLE"
+    exit 1
+fi
+
+# -m - includes trusted.* and other namespaces where readable; inability to
+# enumerate is UNKNOWN, not evidence of their absence.
+attrs=$(getfattr -R -d -m - "$SRC" 2>/dev/null) || {
+    echo "UNKNOWN_XATTR_READ_FAILED"
+    exit 1
+}
+if [ -n "$attrs" ]; then
+    echo "XATTRS_PRESENT"
+    exit 1
+fi
+
+echo "NO_DETECTED_SPECIAL_METADATA_NOT_MIGRATION_APPROVAL"
