@@ -33,6 +33,8 @@ jobs:
         run: python3 tests/test_extroot_preflight.py
       - name: Metadata audit and fail-closed migration
         run: python3 tests/test_metadata_migration.py
+      - name: Guarded rsync stage simulation
+        run: python3 tests/test_userdata_stage_rsync.py
       - name: Overlay content and metadata comparator
         run: python3 tests/test_compare_overlay_upper.py
       - name: Beta security regression
