@@ -16,7 +16,7 @@ ROOT=$2
 
 # No unsafe paths, symlinked metadata directories or unfinished migrations.
 [ "$ROOT" != / ] || { echo "REFUSED_ROOT_PATH"; exit 1; }
-for p in upper work .e2631-stage .e2631-extroot-ready; do
+for p in upper work .e2631-stage .e2631-txn .e2631-extroot-ready; do
     if [ -L "$ROOT/$p" ]; then
         echo "REFUSED_SYMLINK:$p"
         exit 1
@@ -25,6 +25,13 @@ done
 
 if [ -e "$ROOT/.e2631-stage" ]; then
     echo "INCOMPLETE_STAGING"
+    exit 1
+fi
+
+# All future transactional migrations retain an intent journal until commit.
+# Never mistake a torn transaction for a legacy installation.
+if [ -e "$ROOT/.e2631-txn" ]; then
+    echo "INCOMPLETE_TRANSACTION"
     exit 1
 fi
 
