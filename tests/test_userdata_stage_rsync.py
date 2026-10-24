@@ -68,8 +68,8 @@ with tempfile.TemporaryDirectory() as temp:
     ubifs2 = root / "ubifs2"
     ubifs2.mkdir()
     mounts.write_text(
-        f"/dev/mtd8 {jffs2} jffs2 ro 0 0\\n"
-        f"/dev/ubi0_0 {ubifs2} ubifs rw 0 0\\n"
+        f"/dev/mtd8 {jffs2} jffs2 ro 0 0\n"
+        f"/dev/ubi0_0 {ubifs2} ubifs rw 0 0\n"
     )
     p = subprocess.run(
         ["/bin/sh", str(script), "--stage", str(src), str(ubifs2)],
