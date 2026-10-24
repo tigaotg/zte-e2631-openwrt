@@ -98,10 +98,16 @@ for f in packages luci; do
 		die "cannot fetch pinned $f commit $pinned"
 	    git -C "$E2631_TREE/feeds/$f" checkout -q --detach "$pinned"
 	fi
-	[ -f "$E2631_TREE/feeds/$f.index" ] || {
-		say "indexing feed $f"
-		( cd "$E2631_TREE" && ./scripts/feeds update "$f" 2>&1 | tail -3 )
-	}
+	if [ -n "$pinned" ]; then
+	    # 'feeds update' without -i would pull latest and undo the checkout.
+	    say "indexing pinned feed $f without network update"
+	    ( cd "$E2631_TREE" && ./scripts/feeds update -i "$f" 2>&1 | tail -3 )
+	else
+	    [ -f "$E2631_TREE/feeds/$f.index" ] || {
+		    say "indexing feed $f"
+		    ( cd "$E2631_TREE" && ./scripts/feeds update "$f" 2>&1 | tail -3 )
+	    }
+	fi
 done
 say "installing feed packages"
 ( cd "$E2631_TREE" && ./scripts/feeds install -a 2>&1 | grep -E "Ignoring|Installing" | tail -8 )
