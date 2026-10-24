@@ -141,3 +141,21 @@ quiescence and real crash tests remain mandatory.
 
 **Do not run this prototype against a production E2631.** There is no
 supported transaction finalizer yet.
+
+## Distinct fresh-install build profile
+
+For an experimental **fresh-install-only** candidate, set
+`E2631_FRESH_INSTALL_ONLY=1` for both `make bootstrap` and
+`make build`. Bootstrap applies the normal overlay to the separate
+OpenWrt build tree, then fails unless it can turn that generated tree's
+ROM `fstab` Extroot entry to `enabled '0'`. The build step refuses
+to continue if this safety property is missing. The source overlay
+and existing-UBIFS research branch remain unchanged.
+
+The manual CI candidate build sets this flag. **Do not sysupgrade an
+existing extroot device with a fresh-install-only candidate.** Its
+previous UBIFS upperdir would not be mounted and its configuration
+would appear absent; the data is not intentionally erased, but the
+upgrade path has not been validated. This is not a complete fresh
+installation endorsement: factory flashing, storage behavior and Wi-Fi
+still need actual hardware testing.
