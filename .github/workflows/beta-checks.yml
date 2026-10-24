@@ -39,6 +39,8 @@ jobs:
         run: python3 tests/test_compare_overlay_upper.py
       - name: Beta security regression
         run: python3 tests/test_beta_safety.py
+      - name: Fresh-only build profile guard
+        run: python3 tests/test_fresh_profile.py
       - name: Explain validation boundary
         run: |
           echo "Static and mock tests only."
