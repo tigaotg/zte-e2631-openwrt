@@ -123,9 +123,12 @@ if [ -z "$secs" ]; then
 	exit 1
 fi
 
-if [ ${#KEY} -lt 8 ]; then
-	[ -z "$KEY" ] || log "key shorter than 8 chars, ignoring it -> open network"
+if [ -z "$KEY" ]; then
+	# Open mode is explicit and should never be used by automatic provisioning.
 	enc_val=none
+elif [ ${#KEY} -lt 8 ] || [ ${#KEY} -gt 63 ]; then
+	log "WPA2 passphrase must be 8..63 characters; refusing to create an open AP"
+	exit 2
 else
 	enc_val=psk2
 fi
