@@ -52,6 +52,21 @@ fi
 say "applying the E2631 overlay to $E2631_TREE"
 bash "$E2631_KIT/apply.sh" "$E2631_TREE"
 
+# Public Beta's initial-install profile must never auto-activate a possibly
+# empty or partially migrated userdata. The historical source overlay is
+# unchanged for existing UBIFS installations; cross-profile sysupgrade is
+# deliberately NOT supported until hardware migration testing.
+if [ "${E2631_FRESH_INSTALL_ONLY:-0}" = 1 ]; then
+    FSTAB="$E2631_TREE/target/linux/sanechips/base-files/etc/config/fstab"
+    [ -f "$FSTAB" ] || die "fresh-only: missing target fstab"
+    grep -Eq "^[[:space:]]*option enabled '1'[[:space:]]*$" "$FSTAB" ||
+        die "fresh-only: cannot locate original enabled Extroot entry"
+    sed -i "s/option enabled '1'/option enabled '0'/" "$FSTAB"
+    grep -Eq "^[[:space:]]*option enabled '0'[[:space:]]*$" "$FSTAB" ||
+        die "fresh-only: failed to disable Extroot"
+    say "FRESH-INSTALL-ONLY: automatic UBIFS Extroot disabled in build tree"
+fi
+
 # The two edits apply.sh must leave behind, checked here rather than trusted:
 # both are what make the image boot on this board instead of the H3600.
 grep -qx 'CONFIG_CMDLINE_FORCE=y' "$E2631_TREE/target/linux/sanechips/config-6.18" ||
