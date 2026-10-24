@@ -2,6 +2,20 @@
 
 **中文** · [English](README.en.md)
 
+> **公开 Beta 开发分支（尚未发布固件）**：本分支 `beta/public-readiness`
+> 正在准备可复现构建、首次安装保护、Wi-Fi 安全默认值和 Extroot
+> 迁移验证。它不是稳定固件，也没有完成任何新的全新设备刷机验收。
+> **请勿直接把此分支自行编译的镜像刷入生产路由器。**
+>
+> - [Beta 发布门槛和未解决的问题](docs/BETA-READINESS.md)
+> - [Extroot 迁移事务设计](docs/EXTROOT-TRANSACTION-DESIGN.md)
+> - [自动源代码检查](.github/workflows/beta-checks.yml)
+> - [手动构建流程（只保留构建日志和来源记录，不自动发布固件）](.github/workflows/beta-build.yml)
+>
+> Beta 候选构建采用 `E2631_FRESH_INSTALL_ONLY=1`，禁用构建树中的
+> 自动 Extroot 激活。**不能用该候选直接升级已有 UBIFS Extroot 的设备**；
+> 源码归档中的历史说明不等同于当前 Beta 的功能保证。
+
 ## 交接索引：2026-10-20（已上传全部本地工作记录）
 
 **重要：本分支是完整的技术归档，并不是已验证可向普通用户发布的固件。** 在原作者 [Zlion-Y](https://github.com/Zlion-Y/zte-e2631-openwrt) 完成基础适配、A/B 及封包工作的基础上，我继续完成了 Wi-Fi 启动路径改进、PL310 相关保护、47 MiB UBIFS Extroot 实测，以及尚未完结的首次初始化安全原型。
