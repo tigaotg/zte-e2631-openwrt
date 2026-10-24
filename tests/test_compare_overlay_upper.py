@@ -36,6 +36,9 @@ with tempfile.TemporaryDirectory() as temp:
     assert "target" in run(1).stdout
     (dst / "link").unlink()
     (dst / "link").symlink_to("config")
+    link_st = os.lstat(src / "link")
+    os.utime(dst / "link", ns=(link_st.st_atime_ns, link_st.st_mtime_ns),
+             follow_symlinks=False)
 
     # Replacing a symlink modifies the parent directory metadata.
     shutil.copystat(src, dst, follow_symlinks=False)
