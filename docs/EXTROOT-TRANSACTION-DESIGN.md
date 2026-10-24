@@ -81,3 +81,18 @@ treat `LEGACY` as automatically new/empty.
 
 **Current code only identifies unsafe states. It does not implement this
 transaction, enable runtime activation or solve legacy compatibility.**
+
+## Independent host-side comparison (implemented, not integrated)
+
+`python3 tools/compare_overlay_upper.py SOURCE_UPPER STAGED_UPPER`
+recursively compares path sets, regular-file SHA256, type, owner/group,
+permission bits, nanosecond mtime, symlink targets, device major/minor,
+xattr names/bytes and hardlink relationships. It follows no symlinks
+and fails closed if a source or destination attribute is unreadable.
+
+It **does not copy any files** and requires sufficiently privileged
+access to the raw JFFS2 and UBIFS upperdirs. Comparing only the merged
+`/` view is invalid because OverlayFS hides whiteouts and opaque
+metadata. A successful comparison does not prove crash consistency,
+boot compatibility or complete copy fidelity on device; it is one
+necessary acceptance check, not authority to write an activation marker.
