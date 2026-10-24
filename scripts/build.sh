@@ -30,6 +30,11 @@ grep -q 'Makefile.e2631' "$E2631_TREE/target/linux/sanechips/image/Makefile" ||
 	die "the overlay is not applied to $E2631_TREE - run: bash scripts/bootstrap.sh"
 grep -q '^CONFIG_TARGET_DEVICE_sanechips_generic_DEVICE_zte_zxhn-e2631=y' "$E2631_TREE/.config" ||
 	die "the E2631 device is not selected in $E2631_TREE/.config - the seed did not land"
+if [ "${E2631_FRESH_INSTALL_ONLY:-0}" = 1 ]; then
+    FSTAB="$E2631_TREE/target/linux/sanechips/base-files/etc/config/fstab"
+    grep -Eq "^[[:space:]]*option enabled '0'[[:space:]]*$" "$FSTAB" ||
+        die "fresh-only build refused: Extroot is not disabled in the generated tree"
+fi
 e2631_need_cmd make "run the build" || exit 1
 
 STAMP=$(date +%Y%m%d-%H%M%S)
