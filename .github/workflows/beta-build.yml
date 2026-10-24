@@ -55,6 +55,7 @@ jobs:
           python3 tests/test_userdata_stage_rsync.py
           python3 tests/test_compare_overlay_upper.py
           python3 tests/test_beta_safety.py
+          python3 tests/test_fresh_profile.py
       - name: Bootstrap pinned OpenWrt and feeds
         run: make bootstrap
       - name: Compile without publishing a flashable factory package
