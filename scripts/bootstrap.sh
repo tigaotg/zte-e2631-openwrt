@@ -110,7 +110,8 @@ say "seeding .config from seed/e2631.config"
 cp "$E2631_KIT/seed/e2631.config" "$E2631_TREE/.config"
 ( cd "$E2631_TREE" && make defconfig >/dev/null 2>&1 )
 for want in CONFIG_TARGET_DEVICE_sanechips_generic_DEVICE_zte_zxhn-e2631= \
-	CONFIG_SOFT_FLOAT= CONFIG_PACKAGE_luci= CONFIG_PACKAGE_e2631-fwslot=; do
+	CONFIG_SOFT_FLOAT= CONFIG_PACKAGE_luci= CONFIG_PACKAGE_e2631-fwslot= \
+	CONFIG_PACKAGE_rsync= CONFIG_RSYNC_xattr= CONFIG_RSYNC_acl=; do
 	grep -q "^$want" "$E2631_TREE/.config" || die "seed check: $want missing after defconfig"
 done
 say "seed ok: E2631 device selected, soft-float on, LuCI and the slot tool in the image"
