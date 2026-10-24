@@ -113,6 +113,28 @@ say "installing feed packages"
 ( cd "$E2631_TREE" && ./scripts/feeds install -a 2>&1 | grep -E "Ignoring|Installing" | tail -8 )
 [ -d "$E2631_TREE/package/feeds/packages" ] || die "feed install produced no package/feeds/packages"
 
+# ---- Python 3.14 target libffi dependency -----------------------------------
+# This pinned base deliberately omits package/libs/libffi, while the pinned
+# packages feed builds Python with --with-system-ffi. Python's _ctypes source
+# unconditionally includes ffi.h during its target build: without a target
+# libffi build dependency, a clean parallel CI run fails after ~50 minutes.
+# Vendor the upstream libffi package in overlay/ and stage it before Python.
+[ -f "$E2631_TREE/package/libs/libffi/Makefile" ] ||
+    die "missing vendored target libffi package; check overlay/package/libs/libffi"
+PYFFIPATCH="$E2631_KIT/patches/python3-libffi-build-dep.patch"
+[ -f "$PYFFIPATCH" ] || die "missing Python target libffi build-dependency patch"
+if git -C "$E2631_TREE/feeds/packages" apply --reverse --check "$PYFFIPATCH" 2>/dev/null; then
+    say "Python libffi dependency patch already applied"
+elif git -C "$E2631_TREE/feeds/packages" apply --check "$PYFFIPATCH" 2>/dev/null; then
+    git -C "$E2631_TREE/feeds/packages" apply "$PYFFIPATCH" ||
+        die "cannot apply Python libffi dependency patch"
+    say "Python target build now depends on staged libffi headers"
+else
+    die "Python feed differs from pinned revision; refuse to guess at libffi build ordering"
+fi
+grep -Eq '^PKG_BUILD_DEPENDS:=libffi ' "$E2631_TREE/feeds/packages/lang/python/python3/Makefile" ||
+    die "Python libffi dependency missing after patch"
+
 # ---- E2631 LuCI attribution -----------------------------------------------
 # Apply after cloning/installing feeds, before compiling LuCI.
 LUCIPATCH="$E2631_KIT/patches/luci-bootstrap-footer.patch"
