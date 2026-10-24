@@ -1,0 +1,71 @@
+#!/bin/sh
+# Read-only inspection of existing E2631 userdata UBIFS, not an activation gate.
+# Never attach/format/erase/create a volume or change boot-time fstab.
+set -eu
+
+[ "${1:-}" = "--inspect" ] && [ "$#" -eq 1 ] || {
+    echo "Usage: $0 --inspect" >&2
+    exit 2
+}
+
+for item in "name:userdata" "size:49283072" "erasesize:131072"; do
+    key=${item%%:*}
+    expected=${item#*:}
+    actual=$(cat "/sys/class/mtd/mtd10/$key" 2>/dev/null || :)
+    [ "$actual" = "$expected" ] || {
+        echo "REFUSED_MTD_GEOMETRY:$key"
+        exit 1
+    }
+done
+
+[ "$(cat /sys/class/ubi/ubi0/mtd_num 2>/dev/null)" = "10" ] || {
+    echo "REFUSED_UBI0_MAPPING"
+    exit 1
+}
+[ "$(cat /sys/class/ubi/ubi0_0/name 2>/dev/null)" = "userdata" ] || {
+    echo "REFUSED_UBI_VOLUME"
+    exit 1
+}
+[ -c /dev/ubi0_0 ] || {
+    echo "REFUSED_UBI_DEVICE_NODE"
+    exit 1
+}
+
+AUDITOR=/sbin/e2631-extroot-audit
+[ -x "$AUDITOR" ] || {
+    echo "REFUSED_AUDITOR_UNAVAILABLE"
+    exit 1
+}
+
+# Avoid a second mount when already mounted. The caller is expected to use
+# --inspect from a running system, not from preinit.
+if awk '$1 == "/dev/ubi0_0" || $1 == "ubi0:userdata" {
+    if ($3 == "ubifs") found=1
+} END {exit !found}' /proc/mounts; then
+    path=$(awk '($1 == "/dev/ubi0_0" || $1 == "ubi0:userdata") && $3 == "ubifs" {print $2; exit}' /proc/mounts)
+    echo "ALREADY_MOUNTED:$path"
+    "$AUDITOR" --inspect-dir "$path"
+    exit $?
+fi
+
+tmp=$(mktemp -d /tmp/e2631-extroot-check.XXXXXX) || {
+    echo "REFUSED_NO_TMPDIR"
+    exit 1
+}
+mounted=0
+cleanup() {
+    if [ "$mounted" -eq 1 ]; then
+        umount "$tmp" >/dev/null 2>&1 || echo "WARNING_UNMOUNT_FAILED:$tmp" >&2
+    fi
+    rmdir "$tmp" >/dev/null 2>&1 || :
+}
+trap cleanup EXIT HUP INT TERM
+
+# Read-only means the inspection must not repair or alter the UBIFS volume.
+# A failed read-only mount is an unknown state, never permission to initialize.
+if ! mount -t ubifs -o ro /dev/ubi0_0 "$tmp"; then
+    echo "REFUSED_READONLY_MOUNT_FAILED"
+    exit 1
+fi
+mounted=1
+"$AUDITOR" --inspect-dir "$tmp"
