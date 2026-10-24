@@ -63,4 +63,24 @@ with tempfile.TemporaryDirectory() as temp:
                        capture_output=True, text=True)
     assert q.returncode != 0 and "INCOMPLETE_TRANSACTION" in q.stdout
 
-print("PASS: staging requires explicit confirmation and leaves failed transaction inactive")
+    # A separate fresh destination with simulated successful rsync must still
+    # retain the intent journal and must not create a ready/activation marker.
+    ubifs2 = root / "ubifs2"
+    ubifs2.mkdir()
+    mounts.write_text(
+        f"/dev/mtd8 {jffs2} jffs2 ro 0 0\\n"
+        f"/dev/ubi0_0 {ubifs2} ubifs rw 0 0\\n"
+    )
+    p = subprocess.run(
+        ["/bin/sh", str(script), "--stage", str(src), str(ubifs2)],
+        env={**env, "E2631_CONFIRM": "STAGE_ONLY_NEVER_ACTIVATE"},
+        capture_output=True, text=True,
+    )
+    assert p.returncode == 0 and "STAGED_UNVERIFIED_NOT_COMMITTED" in p.stdout, p
+    assert (ubifs2 / ".e2631-txn" / "upper").is_dir()
+    assert not (ubifs2 / ".e2631-extroot-ready").exists()
+    q = subprocess.run(["/bin/sh", str(audit), "--inspect-dir", str(ubifs2)],
+                       capture_output=True, text=True)
+    assert q.returncode != 0 and "INCOMPLETE_TRANSACTION" in q.stdout
+
+print("PASS: staging is guarded and never activates an incomplete transaction")
