@@ -87,3 +87,21 @@ A `*_CANDIDATE_NEEDS_DEVICE_VALIDATION` result is **not** a safe-to-enable
 decision. This diagnostic is not automatically called from preinit.
 Do not run it in place of a backup or recovery preparation; real-device
 validation of the read-only mount and cleanup behavior remains pending.
+
+## Metadata migration safety stop
+
+The previous `e2631-userdata-migrate --stage` prototype could copy the
+JFFS2 upperdir with BusyBox `cp -a` and promote `upper/work` despite
+unverified preservation of chr(0,0) whiteouts, `trusted.overlay.*` xattrs
+and power-loss atomicity. **It is now disabled and always returns**
+`REFUSED_MIGRATION_NOT_METADATA_SAFE` without copying. The original
+prototype is preserved in Git history.
+
+A read-only `e2631-overlay-metadata-audit --inspect-upper /path/to/upper`
+reports detected whiteouts or extended attributes. If `getfattr` is
+unavailable or unreadable, its result is UNKNOWN and therefore a refusal,
+not an empty-attributes finding. Even a clean report is not approval to
+copy: a metadata-preserving, crash-safe replacement is still required.
+
+No unattended initial formatting, migration or overlay activation has been
+enabled. The pre-existing ROM fstab configuration remains a release blocker.
