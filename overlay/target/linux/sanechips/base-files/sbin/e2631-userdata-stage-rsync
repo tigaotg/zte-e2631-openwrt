@@ -68,6 +68,9 @@ echo "$features" | grep -q 'no xattrs' && {
 echo "$features" | grep -Eq '(^|[^[:alpha:]])ACLs([^[:alpha:]]|$)' || {
     echo REFUSED_RSYNC_NO_ACL; exit 1;
 }
+echo "$features" | grep -q 'no ACLs' && {
+    echo REFUSED_RSYNC_NO_ACL; exit 1;
+}
 
 echo PLAN_STAGING_ONLY_NO_ACTIVATION
 if [ "$MODE" = "--plan" ]; then
