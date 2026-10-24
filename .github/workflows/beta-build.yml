@@ -48,6 +48,7 @@ jobs:
           make check
           python3 tests/test_userdata_init.py
           python3 tests/test_extroot_audit.py
+          python3 tests/test_extroot_crash_model.py
           python3 tests/test_extroot_preflight.py
           python3 tests/test_metadata_migration.py
           python3 tests/test_compare_overlay_upper.py
