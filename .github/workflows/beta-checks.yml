@@ -1,0 +1,33 @@
+name: Beta source checks
+
+on:
+  push:
+    branches:
+      - 'beta/**'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install script lint dependencies
+        run: sudo apt-get update && sudo apt-get install -y busybox gcc
+      - name: Repository source gates
+        run: make check
+      - name: NAND initializer isolated mocks (never access real MTD)
+        run: python3 tests/test_userdata_init.py
+      - name: Beta security regression
+        run: python3 tests/test_beta_safety.py
+      - name: Explain validation boundary
+        run: |
+          echo "Static and mock tests only."
+          echo "No firmware was built, flashed, or validated on hardware."
