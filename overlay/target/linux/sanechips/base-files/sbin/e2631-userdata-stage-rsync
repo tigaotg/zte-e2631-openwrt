@@ -1,0 +1,104 @@
+#!/bin/sh
+# E2631 experimental offline STAGING ONLY. Never invoked at boot.
+# Writes only into a new .e2631-txn under a validated, mounted UBIFS volume.
+# Does not format, erase, detach, create UBI volumes, promote upper/work or
+# write a readiness marker. Hardware testing is still required.
+set -eu
+umask 077
+
+MODE=${1:-}
+[ "$#" -eq 3 ] && { [ "$MODE" = "--plan" ] || [ "$MODE" = "--stage" ]; } || {
+    echo "Usage: $0 --plan|--stage READONLY_JFFS2_UPPER MOUNTED_UBIFS" >&2
+    exit 2
+}
+SRC=$2
+DST=$3
+case "$SRC:$DST" in /*:/*) ;; *) echo REFUSED_RELATIVE_PATH; exit 1 ;; esac
+[ -d "$SRC" ] && [ ! -L "$SRC" ] && [ -d "$DST" ] && [ ! -L "$DST" ] || {
+    echo REFUSED_PATH
+    exit 1
+}
+SRC=$(readlink -f "$SRC")
+DST=$(readlink -f "$DST")
+case "$SRC" in */upper) ;; *) echo REFUSED_SOURCE_NOT_UPPER; exit 1 ;; esac
+[ "$DST" != / ] && [ "$SRC" != "$DST" ] || {
+    echo REFUSED_UNSAFE_PATH
+    exit 1
+}
+case "$SRC" in "$DST"/*) echo REFUSED_NESTED; exit 1 ;; esac
+case "$DST" in "$SRC"/*) echo REFUSED_NESTED; exit 1 ;; esac
+
+# A live, writable JFFS2 upperdir cannot be copied consistently. Require
+# a separately mounted read-only JFFS2 source in maintenance/rescue mode.
+SRC_MOUNT=${SRC%/upper}
+awk -v p="$SRC_MOUNT" '$2==p && $3=="jffs2" && $4 ~ /(^|,)ro(,|$)/ {ok=1} END {exit !ok}' /proc/mounts || {
+    echo REFUSED_SOURCE_NOT_READONLY_JFFS2
+    exit 1
+}
+awk -v p="$DST" '$2==p && $3=="ubifs" && $4 ~ /(^|,)rw(,|$)/ &&
+    ($1=="/dev/ubi0_0" || $1=="ubi0:userdata") {ok=1} END {exit !ok}' /proc/mounts || {
+    echo REFUSED_TARGET_NOT_USERDATA_UBIFS
+    exit 1
+}
+[ "$(cat /sys/class/mtd/mtd10/name 2>/dev/null)" = userdata ] || {
+    echo REFUSED_MTD_NAME; exit 1;
+}
+[ "$(cat /sys/class/mtd/mtd10/size 2>/dev/null)" = 49283072 ] || {
+    echo REFUSED_MTD_SIZE; exit 1;
+}
+[ "$(cat /sys/class/ubi/ubi0/mtd_num 2>/dev/null)" = 10 ] || {
+    echo REFUSED_UBI_MAPPING; exit 1;
+}
+[ "$(cat /sys/class/ubi/ubi0_0/name 2>/dev/null)" = userdata ] || {
+    echo REFUSED_VOLUME_NAME; exit 1;
+}
+[ -z "$(find "$DST" -mindepth 1 -maxdepth 1 -print -quit)" ] || {
+    echo REFUSED_TARGET_NOT_EMPTY
+    exit 1
+}
+
+command -v rsync >/dev/null 2>&1 || { echo REFUSED_NO_RSYNC; exit 1; }
+features=$(rsync --version) || { echo REFUSED_RSYNC_VERSION; exit 1; }
+echo "$features" | grep -Eq '(^|[^[:alpha:]])xattrs([^[:alpha:]]|$)' || {
+    echo REFUSED_RSYNC_NO_XATTR; exit 1;
+}
+echo "$features" | grep -q 'no xattrs' && {
+    echo REFUSED_RSYNC_NO_XATTR; exit 1;
+}
+echo "$features" | grep -Eq '(^|[^[:alpha:]])ACLs([^[:alpha:]]|$)' || {
+    echo REFUSED_RSYNC_NO_ACL; exit 1;
+}
+
+echo PLAN_STAGING_ONLY_NO_ACTIVATION
+if [ "$MODE" = "--plan" ]; then
+    echo DRY_RUN_ONLY
+    exit 0
+fi
+[ "${E2631_CONFIRM:-}" = "STAGE_ONLY_NEVER_ACTIVATE" ] || {
+    echo REFUSED_NO_EXPLICIT_CONFIRMATION
+    exit 3
+}
+
+# From here writes are confined to a NEW transaction directory on userdata.
+# A failed transfer intentionally leaves that directory behind; the extroot
+# audit rejects it. Never automatically clean it up after a failed copy.
+TXN="$DST/.e2631-txn"
+mkdir "$TXN"
+mkdir "$TXN/upper"
+if ! rsync -aHAX --numeric-ids --one-file-system --checksum -- "$SRC/" "$TXN/upper/"; then
+    echo FAILED_COPY_TRANSACTION_RETAINED
+    exit 1
+fi
+# Rsync's dry-run is only a second check, not an independent metadata audit.
+# The host-side comparator is still mandatory before any later commit.
+changes=$(rsync -aHAXn --numeric-ids --one-file-system --checksum --itemize-changes -- "$SRC/" "$TXN/upper/") || {
+    echo FAILED_VERIFY_TRANSACTION_RETAINED
+    exit 1
+}
+[ -z "$changes" ] || {
+    echo DIFFERENCES_TRANSACTION_RETAINED
+    exit 1
+}
+sync
+echo STAGED_UNVERIFIED_NOT_COMMITTED
+echo "Run independent offline metadata comparison; do not activate this volume."
