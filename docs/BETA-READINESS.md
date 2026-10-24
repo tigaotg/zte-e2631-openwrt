@@ -57,3 +57,20 @@ Development branch: `beta/public-readiness`.
 The source changes lower a known security risk; they do not establish device
 safety or general compatibility. **Do not distribute a binary from this
 branch for casual flashing yet.**
+
+## Extroot audit development progress
+
+A new read-only `e2631-extroot-audit --inspect-dir PATH` distinguishes
+uninitialized data, partial `upper/work` layouts, stale staging directories,
+nonempty work directories, legacy candidates and explicitly marked candidates.
+The audit intentionally **does not authorize activation**: it is a directory
+structure check, not proof of correct UBI geometry, metadata fidelity, or
+power-loss atomicity. There is no boot-time invocation or automatic NAND write.
+
+The proposed `.e2631-extroot-ready` marker remains **unissued**. A safe
+producer needs a validated, metadata-preserving migration and a crash-safe
+commit protocol. Existing UBIFS installations may lack this marker, so any
+future boot activation rule must include a tested legacy compatibility path.
+
+The existing ROM `fstab enabled '1'` is still unresolved and prevents release.
+Never tell users that passing this mock test makes the current image safe to flash.
