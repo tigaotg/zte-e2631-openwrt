@@ -122,3 +122,22 @@ The workflow has not been dispatched yet. Its actual ability to fit the
 hosted runner's disk, pass dependency download and finish the kernel build
 is unverified. Failures must be investigated; do not assume "configured"
 means "built".
+
+## Experimental offline rsync stage (not enabled for users)
+
+`e2631-userdata-stage-rsync` is an explicit, manual staging prototype.
+It requires a separately mounted **read-only JFFS2** source, an empty
+correctly mapped RW UBIFS destination, and an rsync binary with xattr
+and ACL support. The new seed configuration selects these capabilities.
+
+Its `--plan` mode is read-only. `--stage` requires
+`E2631_CONFIRM=STAGE_ONLY_NEVER_ACTIVATE`. It stages only under
+`.e2631-txn/upper` and leaves that transaction present even after an
+apparently successful rsync run. The boot audit therefore rejects it.
+It does not format, attach, promote, commit, change `fstab` or activate
+the new overlay. A second dry-run comparison is insufficient as a
+standalone integrity guarantee; the independent host-side comparator,
+quiescence and real crash tests remain mandatory.
+
+**Do not run this prototype against a production E2631.** There is no
+supported transaction finalizer yet.
