@@ -15,8 +15,10 @@ with tempfile.TemporaryDirectory() as folder:
     upper.mkdir()
     tool = path / "tool"
     tool.mkdir()
+    (tool / "find").symlink_to("/usr/bin/find")
     env = os.environ.copy()
-    env["PATH"] = str(tool) + os.pathsep + env["PATH"]
+    # Hermetic PATH makes the missing-getfattr case portable across runners.
+    env["PATH"] = str(tool)
 
     def check(expected, code):
         p = subprocess.run(["sh", str(audit), "--inspect-upper", str(upper)], env=env, capture_output=True, text=True)
