@@ -105,3 +105,20 @@ copy: a metadata-preserving, crash-safe replacement is still required.
 
 No unattended initial formatting, migration or overlay activation has been
 enabled. The pre-existing ROM fstab configuration remains a release blocker.
+
+## Repeatable build automation
+
+A manually triggered `.github/workflows/beta-build.yml` uses the exact
+base commit `db8b8d4130` and pins packages feed to
+`05d12617f1bcd35fa09803c708a564e32e9dd665` and LuCI feed to
+`1c67452adb01413e78feb109180bd15186612ead`. It first runs static
+and isolated tests, then executes `make bootstrap` and
+`scripts/build.sh --no-pack`. It only uploads provenance and a build
+log, **not** a factory package, Release, or automatic flashable image.
+Successful completion would verify a CI compile under these exact inputs,
+not hardware readiness.
+
+The workflow has not been dispatched yet. Its actual ability to fit the
+hosted runner's disk, pass dependency download and finish the kernel build
+is unverified. Failures must be investigated; do not assume "configured"
+means "built".
