@@ -19,6 +19,7 @@ jobs:
       E2631_TREE: /tmp/e2631-beta-openwrt
       E2631_WORK: /tmp/e2631-beta-work
       E2631_OUT: /tmp/e2631-beta-work/out
+      E2631_FRESH_INSTALL_ONLY: '1'
       E2631_BASE_SHA: db8b8d4130457dbe46558a7cea872dd2dae539e6
       E2631_PACKAGES_SHA: 05d12617f1bcd35fa09803c708a564e32e9dd665
       E2631_LUCI_SHA: 1c67452adb01413e78feb109180bd15186612ead
