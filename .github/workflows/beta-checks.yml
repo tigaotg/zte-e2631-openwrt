@@ -27,6 +27,8 @@ jobs:
         run: python3 tests/test_userdata_init.py
       - name: Extroot state-machine simulation (no NAND access)
         run: python3 tests/test_extroot_audit.py
+      - name: Extroot read-only preflight mocks
+        run: python3 tests/test_extroot_preflight.py
       - name: Beta security regression
         run: python3 tests/test_beta_safety.py
       - name: Explain validation boundary
