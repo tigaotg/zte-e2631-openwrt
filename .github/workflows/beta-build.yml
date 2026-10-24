@@ -1,6 +1,11 @@
 name: Beta candidate build (UNVERIFIED)
 
 on:
+  push:
+    branches:
+      - beta/public-readiness
+    paths:
+      - '.github/workflows/beta-build.yml'
   workflow_dispatch:
 
 permissions:
