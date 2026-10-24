@@ -2,6 +2,21 @@
 
 [中文](README.md) · **English**
 
+> **Public Beta preparation only — no firmware is released.** This
+> `beta/public-readiness` branch adds source checks, pinned manual builds,
+> fail-closed wireless defaults and experimental read-only/offline Extroot
+> tooling. It has not passed fresh-device flashing, cold-boot association,
+> or power-cut tests. **Do not flash generated images onto a production router.**
+>
+> - [Beta release blockers](docs/BETA-READINESS.md)
+> - [Extroot transaction design](docs/EXTROOT-TRANSACTION-DESIGN.md)
+> - [Source checks](.github/workflows/beta-checks.yml)
+> - [Manual build, logs/provenance only; no firmware publication](.github/workflows/beta-build.yml)
+>
+> The experimental build profile `E2631_FRESH_INSTALL_ONLY=1` disables
+> automatic Extroot activation in its generated tree. **It is not a supported
+> sysupgrade path for existing UBIFS Extroot installations.**
+
 ## Complete maintainer handoff — 2026-10-20
 
 **This branch archives the development code and evidence; it is not a general-use firmware release.** The original port, vendor-compatible packaging and A/B recovery were established by [Zlion-Y and contributors](https://github.com/Zlion-Y/zte-e2631-openwrt). The work recorded here is subsequent development and hardware testing.
