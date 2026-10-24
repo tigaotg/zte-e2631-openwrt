@@ -98,16 +98,11 @@ done
 log "MT7916 ready"
 
 if [ ! -e "$PROVISIONED" ] && factory_wireless; then
-    log "creating first-boot OpenWrt AP"
-
-    /sbin/e2631-wifi-ap OpenWrt || exit 1
-
-    if ! ap_ready; then
-        log "setup AP did not start"
-        exit 1
-    fi
-
-    touch "$PROVISIONED" || exit 1
+    # Public beta: never expose an open AP on a fresh installation.
+    # Leave provisioning to an administrator over the wired LAN.
+    log "factory wireless is unconfigured; leaving AP disabled until secured setup"
+    /sbin/e2631-wifi-ap off >/dev/null 2>&1 || :
+    # Do not set PROVISIONED: a later explicit WPA2 configuration remains detectable.
 else
     # Never rewrite user SSID, encryption, or passwords.
     ubus call network reload >/dev/null 2>&1
